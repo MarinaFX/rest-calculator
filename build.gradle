@@ -10,16 +10,13 @@ buildscript {
 }
 
 plugins {
+    id 'com.jfrog.artifactory' version '3.10.0'
     id 'org.springframework.boot' version '2.4.1'
     id 'io.spring.dependency-management' version '1.0.10.RELEASE'
     id 'java'
 }
 
-allprojects {
-    apply plugin: "com.jfrog.artifactory"
-}
-
-artifactory {
+artifactoryPublish {
     contextUrl = "${artifactory_url}"   //The base Artifactory URL if not overridden by the publisher/resolver
     publish {
         repository {
