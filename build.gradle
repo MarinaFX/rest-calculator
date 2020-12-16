@@ -19,7 +19,7 @@ allprojects {
     apply plugin: "com.jfrog.artifactory"
 }
 
-artifactoryPublish {
+task artifactory {
     contextUrl = "${artifactory_url}"   //The base Artifactory URL if not overridden by the publisher/resolver
     publish {
         repository {
