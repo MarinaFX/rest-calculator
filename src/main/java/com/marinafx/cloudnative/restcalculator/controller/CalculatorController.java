@@ -25,7 +25,7 @@ public class CalculatorController {
         this.calculator = calculator;
     }
 
-    @GetMapping(value = "calculate/{operation}/{n1}/{n2}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "calculate/{operation}/{n1}/{n2}")
     public ResponseEntity<String> calculate(
             @PathVariable("operation") String op,
             @PathVariable("n1") double n1,
@@ -47,12 +47,11 @@ public class CalculatorController {
         }
     }
 
-    @GetMapping(value = "/logs", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/logs")
     public ResponseEntity<String> getLogs() {
-        StringBuilder result = buildLogs();
         return new ResponseEntity<>(
                 "{ \n \"Service\" : \"Logs\", \n" +
-                        " \"History\" : " + result + "\n}",
+                        " \"History\" : " + buildLogs() + "\n}",
                 HttpStatus.OK
         );
     }
