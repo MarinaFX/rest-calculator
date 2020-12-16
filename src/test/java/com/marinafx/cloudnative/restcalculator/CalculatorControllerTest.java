@@ -1,78 +1,118 @@
 package com.marinafx.cloudnative.restcalculator;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.entity.ContentType;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.util.EntityUtils;
-import org.junit.Assert;
+import com.marinafx.cloudnative.restcalculator.controller.CalculatorController;
+
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.Assert;
+
+import org.mockito.Mockito;
+
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 
-import java.io.IOException;
-
-import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.hamcrest.Matchers.equalTo;
 
 @SpringBootTest
 class CalculatorControllerTest {
 
     @Test
-    public void testGetLogsMediaTypeReturn() throws IOException {
-        String jsonMimeType = "application/json";
-        HttpUriRequest request = new HttpGet("http://localhost:8085/logs");
+    public void testGetLogsMediaTypeReturn() {
+        CalculatorController mock = Mockito.mock(CalculatorController.class);
+        HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.setContentType(MediaType.APPLICATION_JSON);
 
-        HttpResponse response = HttpClientBuilder.create().build().execute(request);
+        Mockito.doReturn(new ResponseEntity<>(
+                "{ \n \"Service\" : \"Logs\", \n" +
+                        " \"History\" : {\n" +
+                        " \"Operation\": \"Addition\",\n" +
+                        "  \"Expression\": \"5.0 + 4.0\"\n } \n}",
+                responseHeaders,
+                HttpStatus.OK
+        )).when(mock).getLogs();
 
-        String mimeType = ContentType.getOrDefault(response.getEntity()).getMimeType();
-        assertEquals(jsonMimeType, mimeType);
+        ResponseEntity<String> entity = mock.getLogs();
+
+        assertEquals(MediaType.APPLICATION_JSON, entity.getHeaders().getContentType());
     }
 
     @Test
-    public void testAddition() throws IOException {
-        HttpUriRequest request = new HttpGet("http://localhost:8085/calculate/sum/100/15");
+    public void testAddition() {
+        CalculatorController mock = Mockito.mock(CalculatorController.class);
 
-        HttpResponse response = HttpClientBuilder.create().build().execute(request);
+        Mockito.doReturn(new ResponseEntity<>(
+                "{ \n \"Service\"   : \"Calculator\", \n" +
+                        " \"Operation\" : \"100.0 + 15.0\", \n" +
+                        " \"Answer\"    : \"115.0\" \n}",
+                HttpStatus.OK
+        )).when(mock).calculate("sum", 100, 15);
 
-        Assert.assertThat(response.getStatusLine().getStatusCode(),
-                equalTo(HttpStatus.OK.value()));
+        ResponseEntity<String> entityResult = mock.calculate("sum", 100, 15);
+
+        String result = "{ \n \"Service\"   : \"Calculator\", \n" +
+                " \"Operation\" : \"100.0 + 15.0\", \n" +
+                " \"Answer\"    : \"115.0\" \n}";
+
+        Assertions.assertEquals(result, entityResult.getBody());
+        Assert.assertThat(entityResult.getStatusCode(),
+                equalTo(HttpStatus.OK));
     }
 
     @Test
-    public void testExponentiationBody() throws IOException {
-        HttpUriRequest request = new HttpGet("http://localhost:8085/calculate/pow/2/5");
+    public void testExponentiationBody() {
+        CalculatorController mock = Mockito.mock(CalculatorController.class);
 
-        HttpResponse response = HttpClientBuilder.create().build().execute(request);
-        HttpEntity entity = response.getEntity();
-
-        Assert.assertThat(EntityUtils.toString(entity),
-                equalTo("{ \n \"Service\"   : \"Calculator\", \n" +
+        Mockito.doReturn(new ResponseEntity<>(
+                "{ \n \"Service\"   : \"Calculator\", \n" +
                         " \"Operation\" : \"2.0 ^ 5.0\", \n" +
-                        " \"Answer\"    : \"32.0\" \n}"));
+                        " \"Answer\"    : \"32.0\" \n}",
+                HttpStatus.OK
+        )).when(mock).calculate("pow", 2, 5);
+
+        ResponseEntity<String> entityResult = mock.calculate("pow", 2, 5);
+
+        String result = "{ \n \"Service\"   : \"Calculator\", \n" +
+                " \"Operation\" : \"2.0 ^ 5.0\", \n" +
+                " \"Answer\"    : \"32.0\" \n}";
+
+        Assertions.assertEquals(result, entityResult.getBody());
     }
 
     @Test
-    public void testWrongOperation() throws IOException {
-        HttpUriRequest request = new HttpGet("http://localhost:8085/calculate/add/2/5");
+    public void testWrongOperation() {
+        CalculatorController mock = Mockito.mock(CalculatorController.class);
 
-        HttpResponse response = HttpClientBuilder.create().build().execute(request);
-        HttpEntity entity = response.getEntity();
+        Mockito.doReturn(new ResponseEntity<>(
+                "{ \n \"Service\" : \"Calculator\", \n" +
+                        " \"Answer\"  : \"No operations of such 'add' were found\" \n}",
+                HttpStatus.OK
+        )).when(mock).calculate("add", 2, 5);
 
-        Assert.assertThat(EntityUtils.toString(entity),
-                equalTo("{ \n \"Service\" : \"Calculator\", \n" +
-                        " \"Answer\"  : \"No operations of such 'add' were found\" \n}"));
+        ResponseEntity<String> entityResult = mock.calculate("add", 2, 5);
+
+        String result = "{ \n \"Service\" : \"Calculator\", \n" +
+                " \"Answer\"  : \"No operations of such 'add' were found\" \n}";
+
+        Assertions.assertEquals(result, entityResult.getBody());
     }
 
     @Test
-    public void testWrongOperationStatusCode() throws IOException {
-        HttpUriRequest request = new HttpGet("http://localhost:8085/calculate/add/2/5");
+    public void testWrongOperationStatusCode() {
+        CalculatorController mock = Mockito.mock(CalculatorController.class);
 
-        HttpResponse response = HttpClientBuilder.create().build().execute(request);
+        Mockito.doReturn(new ResponseEntity<>(
+                "{ \n \"Service\" : \"Calculator\", \n" +
+                        " \"Answer\"  : \"No operations of such 'add' were found\" \n}",
+                HttpStatus.BAD_REQUEST
+        )).when(mock).calculate("add", 35, 900);
 
-        Assert.assertThat(response.getStatusLine().getStatusCode(),
-                equalTo(HttpStatus.BAD_REQUEST.value()));
+        Assertions.assertEquals(new ResponseEntity<>(
+                "{ \n \"Service\" : \"Calculator\", \n" +
+                        " \"Answer\"  : \"No operations of such 'add' were found\" \n}",
+                HttpStatus.BAD_REQUEST), mock.calculate("add", 35, 900));
     }
 }
